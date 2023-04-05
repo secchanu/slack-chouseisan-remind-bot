@@ -24,6 +24,9 @@ Basic Information の App-Level Tokens に
 `connections:write`を追加した Token を生成する  
 (これを`APP_TOKEN`として扱う)
 
+Slash Commands に
+`/subscribe` `/unsubscribe` `/list` を追加する
+
 OAuth & Permissions の Scopes の Bot Token Scopes に
 `chat:write` `chat:write.public` `commands`を追加する
 
