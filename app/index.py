@@ -407,7 +407,9 @@ def remind(hash: str, channel: str):
     next = future[:2]
     if not len(next):
         return False
-    text = reduce(lambda acc, n: acc + f"{n[0]}: {', '.join(n[1])}\n", next, f"{title}\n")
+    text = reduce(
+        lambda acc, n: acc + f"{n[0]}: {', '.join(n[1])}\n", next, f"{title}\n"
+    )
     app.client.chat_postMessage(text=text, channel=channel)
     return True
 
@@ -425,8 +427,9 @@ def runJob():
                 now.hour + int(now.minute > 30)
             ) == int(hour):
                 res = remind(hash, channel)
-                if res:
-                    jobs.append(job)
+                if not res:
+                    continue
+            jobs.append(job)
     with open(schedule_path, mode="w", encoding="utf-8") as wf:
         writer = csv.writer(wf)
         writer.writerows(jobs)
