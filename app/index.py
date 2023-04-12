@@ -1,15 +1,15 @@
 import configparser
-import datetime
 import csv
+import datetime
 from functools import reduce
-import time
+import os
 import threading
-
-from slack_bolt.adapter.socket_mode import SocketModeHandler
-from slack_bolt import Ack, App, BoltContext
-from slack_sdk import WebClient
+import time
 
 import schedule
+from slack_bolt import Ack, App, BoltContext
+from slack_bolt.adapter.socket_mode import SocketModeHandler
+from slack_sdk import WebClient
 
 from chouseisan import csv2data, getCSV, getHash
 from util import get_weekday_str
@@ -188,7 +188,7 @@ def add_chouseisan_remind(ack: Ack, view: dict, client: WebClient):
         csvData = getCSV(hash)
         title, data = csv2data(csvData)
         text = f"{title} を登録しました"
-        with open(schedule_path, "a", encoding="utf-8") as af:
+        with open(schedule_path, mode="a", encoding="utf-8") as af:
             writer = csv.writer(af)
             writer.writerow([hash, channel, weekday, hour, title])
         client.chat_postMessage(text=text, channel=channel)
@@ -323,7 +323,7 @@ def remove_chouseisan_remind(ack: Ack, view: dict, client: WebClient):
             if selected_channel == channel and selected_hash == hash:
                 continue
             jobs.append(job)
-    with open(schedule_path, "w", encoding="utf-8") as wf:
+    with open(schedule_path, mode="w", encoding="utf-8") as wf:
         writer = csv.writer(wf)
         writer.writerows(jobs)
     client.chat_postMessage(text=text, channel=selected_channel)
@@ -403,11 +403,11 @@ def remind(hash: str, channel: str):
     csvData = getCSV(hash)
     title, data = csv2data(csvData)
     today = datetime.date.today()
-    future = filter(lambda d: d[0] >= today, data)
+    future = list(filter(lambda d: d[0] >= today, data))
     next = future[:2]
     if not len(next):
         return False
-    text = reduce(lambda acc, n: acc + f"{n[0]}: {n[1]}\n", next, f"{title}\n")
+    text = reduce(lambda acc, n: acc + f"{n[0]}: {', '.join(n[1])}\n", next, f"{title}\n")
     app.client.chat_postMessage(text=text, channel=channel)
     return True
 
@@ -427,7 +427,7 @@ def runJob():
                 res = remind(hash, channel)
                 if res:
                     jobs.append(job)
-    with open(schedule_path, "w", encoding="utf-8") as wf:
+    with open(schedule_path, mode="w", encoding="utf-8") as wf:
         writer = csv.writer(wf)
         writer.writerows(jobs)
 
@@ -445,6 +445,8 @@ def slack():
 
 
 def main():
+    with open(schedule_path, mode="a", encoding="utf-8") as wf:
+        wf.write("")
     thread_cron = threading.Thread(target=cron)
     thread_cron.start()
     slack()
